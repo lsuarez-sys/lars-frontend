@@ -39,12 +39,19 @@ export async function apiClient<T>(
     }
 
     const text = await response.text();
-    const data = text ? JSON.parse(text) : {};
+    let data: any = {};
+
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch {
+        // Fallback if the backend returns plain text instead of JSON
+        data = { message: text };
+    }
 
     if (!response.ok) {
         const errorMessage = Array.isArray(data.message)
             ? data.message.join(", ")
-            : data.message || "An unexpected error occurred.";
+            : data.message || text || "An unexpected error occurred.";
         throw new Error(errorMessage);
     }
 

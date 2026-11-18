@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx
+﻿// app/dashboard/page.tsx
 "use client";
 
 import { clearTokens, getUserId } from "@/lib/auth";
@@ -36,10 +36,10 @@ import {
 } from "@/components/ui/table";
 
 interface Position {
-  position_id: number;
+  id: number;
   position_code: string;
   position_name: string;
-  id?: number;
+  position_id?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -48,64 +48,64 @@ export default function DashboardPage() {
   const router = useRouter();
   const { isChecking } = useAuthGuard({ requireAuth: true });
 
-  // Data states
   const [positions, setPositions] = useState<Position[]>([]);
-  const [selectedPosition, setSelectedPosition] = useState<Position | null>(
-    null
-  );
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Form states (shared for Create and Update)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [positionCode, setPositionCode] = useState("");
   const [positionName, setPositionName] = useState("");
 
-  // READ (All Positions)
   const fetchPositions = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const data = await apiClient<Position[]>(CONFIG.ENDPOINTS.POSITIONS, {
         method: "GET",
         requiresAuth: true,
       });
       setPositions(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch positions.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to fetch positions.";
+      setError(message);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!isChecking) {
-      fetchPositions();
+    if (isChecking) {
+      return;
     }
-  }, [isChecking, fetchPositions]);
 
-  // READ (Single Position)
+    const timer = window.setTimeout(() => {
+      void fetchPositions();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchPositions, isChecking]);
+
   const handleViewPosition = async (positionId: number) => {
     setError("");
     setSuccess("");
+
     try {
-      const data = await apiClient<Position>(
-        `${CONFIG.ENDPOINTS.POSITIONS}/${positionId}`,
-        {
-          method: "GET",
-          requiresAuth: true,
-        }
-      );
+      const data = await apiClient<Position>(`${CONFIG.ENDPOINTS.POSITIONS}/${positionId}`, {
+        method: "GET",
+        requiresAuth: true,
+      });
       setSelectedPosition(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load position details.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load position details.";
+      setError(message);
     }
   };
 
-  // Open Form for CREATE
   const openCreateForm = () => {
     setEditingId(null);
     setPositionCode("");
@@ -116,9 +116,10 @@ export default function DashboardPage() {
     setIsFormOpen(true);
   };
 
-  // Open Form for UPDATE
   const openEditForm = (position: Position) => {
-    setEditingId(position.position_id);
+    const posId = position.id ?? position.position_id;
+    if (!posId) return;
+    setEditingId(posId);
     setPositionCode(position.position_code);
     setPositionName(position.position_name);
     setSelectedPosition(null);
@@ -134,7 +135,6 @@ export default function DashboardPage() {
     setPositionName("");
   };
 
-  // CREATE & UPDATE Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -150,26 +150,22 @@ export default function DashboardPage() {
 
     try {
       if (editingId !== null) {
-        // UPDATE (PUT /positions/:id)
         await apiClient(`${CONFIG.ENDPOINTS.POSITIONS}/${editingId}`, {
           method: "PUT",
           requiresAuth: true,
           body: JSON.stringify({
             position_code: positionCode,
             position_name: positionName,
-            id: userId,
           }),
         });
         setSuccess(`Position #${editingId} updated successfully.`);
       } else {
-        // CREATE (POST /positions)
         await apiClient(CONFIG.ENDPOINTS.POSITIONS, {
           method: "POST",
           requiresAuth: true,
           body: JSON.stringify({
             position_code: positionCode,
             position_name: positionName,
-            id: userId,
           }),
         });
         setSuccess("New position created successfully.");
@@ -177,14 +173,14 @@ export default function DashboardPage() {
 
       closeForm();
       await fetchPositions();
-    } catch (err: any) {
-      setError(err.message || "Operation failed.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Operation failed.";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // DELETE (DELETE /positions/:id)
   const handleDelete = async (positionId: number) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete Position #${positionId}?`
@@ -193,19 +189,22 @@ export default function DashboardPage() {
 
     setError("");
     setSuccess("");
+
     try {
       await apiClient(`${CONFIG.ENDPOINTS.POSITIONS}/${positionId}`, {
         method: "DELETE",
         requiresAuth: true,
       });
 
-      if (selectedPosition?.position_id === positionId) {
+      const selectedId = selectedPosition?.id ?? selectedPosition?.position_id;
+      if (selectedId === positionId) {
         setSelectedPosition(null);
       }
       setSuccess(`Position #${positionId} deleted successfully.`);
       await fetchPositions();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete position.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete position.";
+      setError(message);
     }
   };
 
@@ -222,10 +221,11 @@ export default function DashboardPage() {
     );
   }
 
+  const selectedPosId = selectedPosition ? (selectedPosition.id ?? selectedPosition.position_id) : null;
+
   return (
     <div className="min-h-screen p-6 md:p-8 bg-background">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Top Navbar */}
         <header className="flex justify-between items-center border-b pb-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -239,7 +239,6 @@ export default function DashboardPage() {
           </Button>
         </header>
 
-        {/* Status Notifications */}
         {error && (
           <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-200">
             {error}
@@ -251,15 +250,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CREATE / UPDATE Form Card */}
         {isFormOpen && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <CardTitle>
-                  {editingId !== null
-                    ? `Update Position #${editingId}`
-                    : "Create New Position"}
+                  {editingId !== null ? `Update Position #${editingId}` : "Create New Position"}
                 </CardTitle>
                 <CardDescription>
                   {editingId !== null
@@ -303,8 +299,8 @@ export default function DashboardPage() {
                     {submitting
                       ? "Saving..."
                       : editingId !== null
-                      ? "Save Changes"
-                      : "Create Position"}
+                        ? "Save Changes"
+                        : "Create Position"}
                   </Button>
                 </div>
               </form>
@@ -312,17 +308,13 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* READ Single Item Details Card */}
-        {selectedPosition && (
+        {selectedPosition && selectedPosId && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
-                <CardTitle>
-                  Position Details (#{selectedPosition.position_id})
-                </CardTitle>
+                <CardTitle>Position Details (#{selectedPosId})</CardTitle>
                 <CardDescription>
-                  Fetched directly from GET /positions/
-                  {selectedPosition.position_id}
+                  Fetched directly from GET /positions/{selectedPosId}
                 </CardDescription>
               </div>
               <Button
@@ -336,21 +328,15 @@ export default function DashboardPage() {
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground block">Position ID</span>
-                <span className="font-medium">
-                  {selectedPosition.position_id}
-                </span>
+                <span className="font-medium">{selectedPosId}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Code</span>
-                <span className="font-medium">
-                  {selectedPosition.position_code}
-                </span>
+                <span className="font-medium">{selectedPosition.position_code}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Name</span>
-                <span className="font-medium">
-                  {selectedPosition.position_name}
-                </span>
+                <span className="font-medium">{selectedPosition.position_name}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Created At</span>
@@ -364,7 +350,6 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Positions Table Card */}
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -374,14 +359,8 @@ export default function DashboardPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={fetchPositions}
-                disabled={loading}
-              >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-                />
+              <Button variant="outline" onClick={() => void fetchPositions()} disabled={loading}>
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                 Read / Refresh
               </Button>
               <Button onClick={openCreateForm}>
@@ -405,68 +384,59 @@ export default function DashboardPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="h-24 text-center text-muted-foreground"
-                      >
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                         Loading positions...
                       </TableCell>
                     </TableRow>
                   ) : positions.length === 0 ? (
                     <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No positions found. Click &quot;Create Position&quot; to
-                        add one.
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        No positions found. Click &quot;Create Position&quot; to add one.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    positions.map((pos) => (
-                      <TableRow key={pos.position_id}>
-                        <TableCell className="font-medium">
-                          {pos.position_id}
-                        </TableCell>
-                        <TableCell>{pos.position_code}</TableCell>
-                        <TableCell>{pos.position_name}</TableCell>
-                        <TableCell>
-                          {pos.created_at
-                            ? new Date(pos.created_at).toLocaleDateString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleViewPosition(pos.position_id)
-                              }
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Read
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => openEditForm(pos)}
-                            >
-                              <Pencil className="w-4 h-4 mr-1" />
-                              Update
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(pos.position_id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    positions.map((pos) => {
+                      const rowId = pos.id ?? pos.position_id;
+                      if (!rowId) return null;
+                      return (
+                        <TableRow key={rowId}>
+                          <TableCell className="font-medium">{rowId}</TableCell>
+                          <TableCell>{pos.position_code}</TableCell>
+                          <TableCell>{pos.position_name}</TableCell>
+                          <TableCell>
+                            {pos.created_at ? new Date(pos.created_at).toLocaleDateString() : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void handleViewPosition(rowId)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Read
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => openEditForm(pos)}
+                              >
+                                <Pencil className="w-4 h-4 mr-1" />
+                                Update
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => void handleDelete(rowId)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

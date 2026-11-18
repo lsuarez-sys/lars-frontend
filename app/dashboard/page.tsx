@@ -16,6 +16,7 @@ import {
   User as UserIcon,
   Users as UsersIcon,
   X,
+  Sparkles,
 } from "lucide-react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { apiClient } from "@/lib/api";
@@ -23,13 +24,6 @@ import { CONFIG } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -62,7 +56,7 @@ export default function DashboardPage() {
 
   const [currentUser, setCurrentUser] = useState<DecodedUser | null>(null);
 
-  // View switch: "positions" | "users" | "both"
+  // Tabs: "positions" | "users" | "both"
   const [activeTab, setActiveTab] = useState<"positions" | "users" | "both">("both");
 
   // Notifications
@@ -372,7 +366,7 @@ export default function DashboardPage() {
       }
 
       if (isSelf) {
-        alert("Your account was deleted. You will now be redirected to the login page.");
+        alert("Your account was deleted. Redirecting to login...");
         handleLogout();
         return;
       }
@@ -388,7 +382,10 @@ export default function DashboardPage() {
   if (isChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Verifying session...</p>
+        <div className="backdrop-blur-xl bg-white/70 border border-purple-200/50 rounded-2xl px-6 py-4 shadow-sm text-purple-900 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
+          <span className="text-sm font-medium">Verifying session...</span>
+        </div>
       </div>
     );
   }
@@ -398,34 +395,48 @@ export default function DashboardPage() {
     : null;
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-background">
+    <div className="min-h-screen p-4 sm:p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              MySQL Data Management: Positions &amp; Users
+        {/* Floating Minimalist Header */}
+        <header className="backdrop-blur-xl bg-white/75 dark:bg-purple-950/40 border border-white/60 dark:border-purple-800/30 rounded-3xl p-5 shadow-sm shadow-purple-900/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
+              <h1 className="text-2xl font-bold tracking-tight text-purple-950 dark:text-purple-100">
+                Dashboard
+              </h1>
+            </div>
+            <p className="text-xs text-purple-700/80 dark:text-purple-300/80 font-medium pl-4.5">
+              Minimalist Lavender Edition · MySQL Live Connection
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             {currentUser && (
-              <div className="text-right hidden sm:block border rounded-md px-3 py-1.5 bg-muted/40">
-                <p className="text-sm font-semibold flex items-center justify-end gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5 text-primary" />
-                  {currentUser.username}
-                  <span className="text-[10px] uppercase font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                    You
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  ID #{currentUser.id} · Role: {currentUser.role || "user"}
-                </p>
+              <div className="flex items-center gap-2.5 bg-purple-100/70 dark:bg-purple-900/40 border border-purple-200/70 dark:border-purple-800/50 rounded-2xl px-3.5 py-1.5 shadow-2xs">
+                <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold uppercase shadow-2xs">
+                  {currentUser.username.charAt(0)}
+                </div>
+                <div className="text-left text-xs leading-tight">
+                  <p className="font-semibold text-purple-950 dark:text-purple-100 flex items-center gap-1.5">
+                    {currentUser.username}
+                    <span className="text-[10px] uppercase font-bold bg-purple-600 text-white px-1.5 py-0.2 rounded-full">
+                      You
+                    </span>
+                  </p>
+                  <p className="text-[11px] text-purple-700 dark:text-purple-300 capitalize">
+                    {currentUser.role || "user"} · #{currentUser.id}
+                  </p>
+                </div>
               </div>
             )}
-            <Button variant="destructive" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="rounded-2xl border-purple-200/80 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-purple-900 dark:text-purple-200 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
               Logout
             </Button>
           </div>
@@ -433,523 +444,582 @@ export default function DashboardPage() {
 
         {/* Status Alerts */}
         {error && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-800">
-            {error}
+          <div className="backdrop-blur-md bg-red-50/90 dark:bg-red-950/70 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-2xl text-xs font-medium shadow-xs flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 text-red-500 hover:bg-transparent"
+              onClick={() => setError("")}
+            >
+              <X className="w-3.5 h-3.5" />
+            </Button>
           </div>
         )}
         {success && (
-          <div className="p-3 text-sm text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 rounded-md border border-emerald-200 dark:border-emerald-800">
-            {success}
+          <div className="backdrop-blur-md bg-purple-50/90 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100 px-4 py-3 rounded-2xl text-xs font-medium shadow-xs flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              {success}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 text-purple-600 hover:bg-transparent"
+              onClick={() => setSuccess("")}
+            >
+              <X className="w-3.5 h-3.5" />
+            </Button>
           </div>
         )}
 
-        {/* View Switcher Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b pb-3">
-          <Button
-            variant={activeTab === "both" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("both")}
-          >
-            Show All ({positions.length + users.length})
-          </Button>
-          <Button
-            variant={activeTab === "users" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("users")}
-          >
-            <UsersIcon className="w-4 h-4 mr-2" />
-            Users ({users.length})
-          </Button>
-          <Button
-            variant={activeTab === "positions" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("positions")}
-          >
-            <Layers className="w-4 h-4 mr-2" />
-            Positions ({positions.length})
-          </Button>
+        {/* Minimalist Segmented Tabs */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="inline-flex p-1 bg-white/70 dark:bg-purple-950/40 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-purple-800/40 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab("both")}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition-all ${
+                activeTab === "both"
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-purple-800 dark:text-purple-300 hover:bg-purple-100/50"
+              }`}
+            >
+              Overview ({positions.length + users.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("users")}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all ${
+                activeTab === "users"
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-purple-800 dark:text-purple-300 hover:bg-purple-100/50"
+              }`}
+            >
+              <UsersIcon className="w-3.5 h-3.5" />
+              Users ({users.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("positions")}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all ${
+                activeTab === "positions"
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-purple-800 dark:text-purple-300 hover:bg-purple-100/50"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              Positions ({positions.length})
+            </button>
+          </div>
         </div>
 
         {/* ======================= USERS SECTION ======================= */}
         {(activeTab === "users" || activeTab === "both") && (
-          <div className="space-y-4">
-            {/* User Form Card */}
+          <section className="space-y-4">
+            {/* User Form Card (Minimalist Glass) */}
             {isUserFormOpen && (
-              <Card className="border-primary/40 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="backdrop-blur-xl bg-white/85 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 rounded-3xl p-6 shadow-md shadow-purple-900/5">
+                <div className="flex justify-between items-center mb-4">
                   <div>
-                    <CardTitle>
-                      {editingUserId !== null
-                        ? `Update User #${editingUserId}`
-                        : "Create New User"}
-                    </CardTitle>
-                    <CardDescription>
-                      {editingUserId !== null
-                        ? "Edit username, role, or update password."
-                        : "Add a new user directly to the MySQL users table."}
-                    </CardDescription>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={closeUserForm}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleUserSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="user_username">Username</Label>
-                        <Input
-                          id="user_username"
-                          placeholder="e.g. jdoe"
-                          value={userUsername}
-                          onChange={(e) => setUserUsername(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="user_password">
-                          {editingUserId !== null
-                            ? "Password (leave blank to keep current)"
-                            : "Password"}
-                        </Label>
-                        <Input
-                          id="user_password"
-                          type="password"
-                          placeholder={
-                            editingUserId !== null ? "Optional new password" : "••••••••"
-                          }
-                          value={userPassword}
-                          onChange={(e) => setUserPassword(e.target.value)}
-                          required={editingUserId === null}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="user_role">Role</Label>
-                        <Input
-                          id="user_role"
-                          placeholder="e.g. user, admin, manager"
-                          value={userRole}
-                          onChange={(e) => setUserRole(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={closeUserForm}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={submittingUser}>
-                        {submittingUser
-                          ? "Saving..."
-                          : editingUserId !== null
-                          ? "Save User Changes"
-                          : "Create User"}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Selected User Details Card */}
-            {selectedUser && (
-              <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      User Details (#{selectedUser.id})
-                      {currentUser?.id === selectedUser.id && (
-                        <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-full">
-                          Your Account
-                        </span>
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      Fetched from MySQL via GET /users/{selectedUser.id}
-                    </CardDescription>
+                    <h3 className="text-base font-bold text-purple-950 dark:text-purple-100">
+                      {editingUserId !== null ? `Edit User #${editingUserId}` : "Add New User"}
+                    </h3>
+                    <p className="text-xs text-purple-700/80 dark:text-purple-300/80">
+                      Write directly to the MySQL users table.
+                    </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSelectedUser(null)}
+                    className="rounded-full text-purple-600 hover:bg-purple-100/60"
+                    onClick={closeUserForm}
                   >
                     <X className="w-4 h-4" />
                   </Button>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground block">User ID</span>
-                    <span className="font-medium">{selectedUser.id}</span>
+                </div>
+                <form onSubmit={handleUserSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="user_username" className="text-xs text-purple-900 font-semibold">
+                        Username
+                      </Label>
+                      <Input
+                        id="user_username"
+                        placeholder="e.g. emily"
+                        value={userUsername}
+                        onChange={(e) => setUserUsername(e.target.value)}
+                        required
+                        className="bg-white/80 dark:bg-purple-900/30 border-purple-200/70 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="user_password" className="text-xs text-purple-900 font-semibold">
+                        {editingUserId !== null ? "Password (optional update)" : "Password"}
+                      </Label>
+                      <Input
+                        id="user_password"
+                        type="password"
+                        placeholder={editingUserId !== null ? "Leave blank to keep" : "••••••••"}
+                        value={userPassword}
+                        onChange={(e) => setUserPassword(e.target.value)}
+                        required={editingUserId === null}
+                        className="bg-white/80 dark:bg-purple-900/30 border-purple-200/70 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="user_role" className="text-xs text-purple-900 font-semibold">
+                        Role
+                      </Label>
+                      <Input
+                        id="user_role"
+                        placeholder="user, admin, manager"
+                        value={userRole}
+                        onChange={(e) => setUserRole(e.target.value)}
+                        required
+                        className="bg-white/80 dark:bg-purple-900/30 border-purple-200/70 rounded-xl text-xs"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Username</span>
-                    <span className="font-medium">{selectedUser.username}</span>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={closeUserForm}
+                      className="rounded-xl border-purple-200 text-purple-800"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={submittingUser}
+                      className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-xs"
+                    >
+                      {submittingUser ? "Saving..." : editingUserId !== null ? "Update User" : "Create User"}
+                    </Button>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Role</span>
-                    <span className="font-medium capitalize">{selectedUser.role}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Created At</span>
-                    <span className="font-medium">
-                      {selectedUser.created_at
-                        ? new Date(selectedUser.created_at).toLocaleString()
-                        : "N/A"}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+                </form>
+              </div>
             )}
 
-            {/* Users Table Card */}
-            <Card>
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <UsersIcon className="w-5 h-5 text-primary" />
-                    Users Table
-                  </CardTitle>
-                  <CardDescription>
-                    All users stored in the MySQL database (including your current user).
-                  </CardDescription>
+            {/* Selected User Details (Minimalist Pill Grid) */}
+            {selectedUser && (
+              <div className="backdrop-blur-xl bg-purple-100/60 dark:bg-purple-950/40 border border-purple-200/80 rounded-3xl p-5 shadow-xs flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-purple-950 uppercase tracking-wide">
+                      User Details (#{selectedUser.id})
+                    </span>
+                    {currentUser?.id === selectedUser.id && (
+                      <span className="text-[10px] font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full">
+                        Your Session
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-purple-600 hover:bg-purple-200/50 rounded-full"
+                    onClick={() => setSelectedUser(null)}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white/70 dark:bg-purple-900/30 p-3.5 rounded-2xl border border-white/60">
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">ID</span>
+                    <span className="font-semibold text-purple-950">{selectedUser.id}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Username</span>
+                    <span className="font-semibold text-purple-950">{selectedUser.username}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Role</span>
+                    <span className="font-semibold text-purple-950 capitalize">{selectedUser.role}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Registered</span>
+                    <span className="font-semibold text-purple-950">
+                      {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Users Card */}
+            <div className="backdrop-blur-xl bg-white/75 dark:bg-purple-950/40 border border-white/60 dark:border-purple-800/30 rounded-3xl p-6 shadow-sm shadow-purple-900/5 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-2xs">
+                    <UsersIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-purple-950 dark:text-purple-100">
+                      Users Directory
+                    </h2>
+                    <p className="text-xs text-purple-700/80 dark:text-purple-300/80">
+                      All registered users in MySQL (including your own account)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => void fetchUsers()}
                     disabled={loadingUsers}
+                    className="rounded-2xl border-purple-200/80 text-purple-800 hover:bg-purple-100/60 text-xs"
                   >
-                    <RefreshCw
-                      className={`w-4 h-4 mr-2 ${loadingUsers ? "animate-spin" : ""}`}
-                    />
-                    Refresh Users
+                    <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingUsers ? "animate-spin text-purple-600" : ""}`} />
+                    Refresh
                   </Button>
-                  <Button onClick={openCreateUserForm}>
-                    <Plus className="w-4 h-4 mr-2" />
+                  <Button
+                    size="sm"
+                    onClick={openCreateUserForm}
+                    className="rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Add User
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
+              </div>
+
+              {/* Users Table */}
+              <div className="rounded-2xl border border-purple-100/80 dark:border-purple-900/40 overflow-hidden bg-white/40 dark:bg-purple-950/20">
+                <Table>
+                  <TableHeader className="bg-purple-50/70 dark:bg-purple-900/30">
+                    <TableRow className="border-b border-purple-100/80 dark:border-purple-900/40">
+                      <TableHead className="w-[70px] text-xs font-bold text-purple-900 uppercase">ID</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Username</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Role</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Created</TableHead>
+                      <TableHead className="text-right text-xs font-bold text-purple-900 uppercase">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingUsers ? (
                       <TableRow>
-                        <TableHead className="w-[80px]">ID</TableHead>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableCell colSpan={5} className="h-24 text-center text-xs text-purple-600/80">
+                          Fetching users from MySQL...
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadingUsers ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-muted-foreground"
+                    ) : users.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center text-xs text-purple-700/80">
+                          No users found in database.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      users.map((u) => {
+                        const isSelf = currentUser?.id === u.id;
+                        return (
+                          <TableRow
+                            key={u.id}
+                            className={`border-b border-purple-100/50 hover:bg-purple-50/50 transition-colors ${
+                              isSelf ? "bg-purple-100/40 font-medium" : ""
+                            }`}
                           >
-                            Loading users from MySQL...
-                          </TableCell>
-                        </TableRow>
-                      ) : users.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-muted-foreground"
-                          >
-                            No users found. Click &quot;Add User&quot; to create one.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        users.map((u) => {
-                          const isSelf = currentUser?.id === u.id;
-                          return (
-                            <TableRow
-                              key={u.id}
-                              className={isSelf ? "bg-primary/5 font-medium" : undefined}
-                            >
-                              <TableCell className="font-mono">{u.id}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <span>{u.username}</span>
-                                  {isSelf && (
-                                    <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
-                                      You
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-muted text-foreground border capitalize">
-                                  <Shield className="w-3 h-3 text-muted-foreground" />
-                                  {u.role || "user"}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground text-sm">
-                                {u.created_at
-                                  ? new Date(u.created_at).toLocaleDateString()
-                                  : "-"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => void handleViewUser(u.id)}
-                                  >
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    Read
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => openEditUserForm(u)}
-                                  >
-                                    <Pencil className="w-4 h-4 mr-1" />
-                                    Update
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => void handleDeleteUser(u.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-1" />
-                                    Delete
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                            <TableCell className="font-mono text-xs text-purple-700">#{u.id}</TableCell>
+                            <TableCell className="text-xs font-semibold text-purple-950">
+                              <div className="flex items-center gap-2">
+                                <span>{u.username}</span>
+                                {isSelf && (
+                                  <span className="text-[10px] uppercase font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full shadow-2xs">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200/60 capitalize">
+                                <Shield className="w-2.5 h-2.5 text-purple-600" />
+                                {u.role || "user"}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-xs text-purple-600/80">
+                              {u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => void handleViewUser(u.id)}
+                                  className="h-7 px-2 text-xs text-purple-700 hover:bg-purple-100/80 rounded-lg"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  Read
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEditUserForm(u)}
+                                  className="h-7 px-2 text-xs text-purple-800 hover:bg-purple-100/80 rounded-lg"
+                                >
+                                  <Pencil className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => void handleDeleteUser(u.id)}
+                                  className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 rounded-lg"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* ===================== POSITIONS SECTION ===================== */}
         {(activeTab === "positions" || activeTab === "both") && (
-          <div className="space-y-4">
+          <section className="space-y-4">
             {/* Position Form Card */}
             {isPositionFormOpen && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="backdrop-blur-xl bg-white/85 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 rounded-3xl p-6 shadow-md shadow-purple-900/5">
+                <div className="flex justify-between items-center mb-4">
                   <div>
-                    <CardTitle>
-                      {editingPositionId !== null
-                        ? `Update Position #${editingPositionId}`
-                        : "Create New Position"}
-                    </CardTitle>
-                    <CardDescription>
-                      {editingPositionId !== null
-                        ? "Modify the position code and name below."
-                        : "Fill in the details to add a new position to MySQL."}
-                    </CardDescription>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={closePositionForm}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handlePositionSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="position_code">Position Code</Label>
-                        <Input
-                          id="position_code"
-                          placeholder="e.g. Pres"
-                          value={positionCode}
-                          onChange={(e) => setPositionCode(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="position_name">Position Name</Label>
-                        <Input
-                          id="position_name"
-                          placeholder="e.g. President"
-                          value={positionName}
-                          onChange={(e) => setPositionName(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={closePositionForm}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={submittingPosition}>
-                        {submittingPosition
-                          ? "Saving..."
-                          : editingPositionId !== null
-                          ? "Save Changes"
-                          : "Create Position"}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Selected Position Details Card */}
-            {selectedPosition && selectedPosId && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
-                    <CardTitle>Position Details (#{selectedPosId})</CardTitle>
-                    <CardDescription>
-                      Fetched directly from GET /positions/{selectedPosId}
-                    </CardDescription>
+                    <h3 className="text-base font-bold text-purple-950 dark:text-purple-100">
+                      {editingPositionId !== null ? `Edit Position #${editingPositionId}` : "Create New Position"}
+                    </h3>
+                    <p className="text-xs text-purple-700/80 dark:text-purple-300/80">
+                      Add or modify positions stored in the MySQL database.
+                    </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSelectedPosition(null)}
+                    className="rounded-full text-purple-600 hover:bg-purple-100/60"
+                    onClick={closePositionForm}
                   >
                     <X className="w-4 h-4" />
                   </Button>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground block">Position ID</span>
-                    <span className="font-medium">{selectedPosId}</span>
+                </div>
+                <form onSubmit={handlePositionSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="position_code" className="text-xs text-purple-900 font-semibold">
+                        Position Code
+                      </Label>
+                      <Input
+                        id="position_code"
+                        placeholder="e.g. MGR"
+                        value={positionCode}
+                        onChange={(e) => setPositionCode(e.target.value)}
+                        required
+                        className="bg-white/80 dark:bg-purple-900/30 border-purple-200/70 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="position_name" className="text-xs text-purple-900 font-semibold">
+                        Position Name
+                      </Label>
+                      <Input
+                        id="position_name"
+                        placeholder="e.g. Operations Manager"
+                        value={positionName}
+                        onChange={(e) => setPositionName(e.target.value)}
+                        required
+                        className="bg-white/80 dark:bg-purple-900/30 border-purple-200/70 rounded-xl text-xs"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Code</span>
-                    <span className="font-medium">{selectedPosition.position_code}</span>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={closePositionForm}
+                      className="rounded-xl border-purple-200 text-purple-800"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={submittingPosition}
+                      className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-xs"
+                    >
+                      {submittingPosition ? "Saving..." : editingPositionId !== null ? "Save Changes" : "Create Position"}
+                    </Button>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Name</span>
-                    <span className="font-medium">{selectedPosition.position_name}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Created At</span>
-                    <span className="font-medium">
-                      {selectedPosition.created_at
-                        ? new Date(selectedPosition.created_at).toLocaleDateString()
-                        : "N/A"}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+                </form>
+              </div>
             )}
 
-            {/* Positions Table Card */}
-            <Card>
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-primary" />
-                    Positions Table
-                  </CardTitle>
-                  <CardDescription>
-                    All organization positions stored in MySQL.
-                  </CardDescription>
+            {/* Selected Position Details */}
+            {selectedPosition && selectedPosId && (
+              <div className="backdrop-blur-xl bg-purple-100/60 dark:bg-purple-950/40 border border-purple-200/80 rounded-3xl p-5 shadow-xs flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-purple-950 uppercase tracking-wide">
+                    Position Details (#{selectedPosId})
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-purple-600 hover:bg-purple-200/50 rounded-full"
+                    onClick={() => setSelectedPosition(null)}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white/70 dark:bg-purple-900/30 p-3.5 rounded-2xl border border-white/60">
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Position ID</span>
+                    <span className="font-semibold text-purple-950">{selectedPosId}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Code</span>
+                    <span className="font-semibold text-purple-950">{selectedPosition.position_code}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Name</span>
+                    <span className="font-semibold text-purple-950">{selectedPosition.position_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-purple-600/80 block font-medium">Created</span>
+                    <span className="font-semibold text-purple-950">
+                      {selectedPosition.created_at ? new Date(selectedPosition.created_at).toLocaleDateString() : "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Positions Card */}
+            <div className="backdrop-blur-xl bg-white/75 dark:bg-purple-950/40 border border-white/60 dark:border-purple-800/30 rounded-3xl p-6 shadow-sm shadow-purple-900/5 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-2xs">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-purple-950 dark:text-purple-100">
+                      Positions Table
+                    </h2>
+                    <p className="text-xs text-purple-700/80 dark:text-purple-300/80">
+                      Organization positions stored in the MySQL positions table
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => void fetchPositions()}
                     disabled={loadingPositions}
+                    className="rounded-2xl border-purple-200/80 text-purple-800 hover:bg-purple-100/60 text-xs"
                   >
-                    <RefreshCw
-                      className={`w-4 h-4 mr-2 ${loadingPositions ? "animate-spin" : ""}`}
-                    />
-                    Refresh Positions
+                    <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingPositions ? "animate-spin text-purple-600" : ""}`} />
+                    Refresh
                   </Button>
-                  <Button onClick={openCreatePositionForm}>
-                    <Plus className="w-4 h-4 mr-2" />
+                  <Button
+                    size="sm"
+                    onClick={openCreatePositionForm}
+                    className="rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Create Position
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
+              </div>
+
+              {/* Positions Table */}
+              <div className="rounded-2xl border border-purple-100/80 dark:border-purple-900/40 overflow-hidden bg-white/40 dark:bg-purple-950/20">
+                <Table>
+                  <TableHeader className="bg-purple-50/70 dark:bg-purple-900/30">
+                    <TableRow className="border-b border-purple-100/80 dark:border-purple-900/40">
+                      <TableHead className="w-[70px] text-xs font-bold text-purple-900 uppercase">ID</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Code</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Position Name</TableHead>
+                      <TableHead className="text-xs font-bold text-purple-900 uppercase">Created</TableHead>
+                      <TableHead className="text-right text-xs font-bold text-purple-900 uppercase">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingPositions ? (
                       <TableRow>
-                        <TableHead className="w-[80px]">ID</TableHead>
-                        <TableHead>Position Code</TableHead>
-                        <TableHead>Position Name</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableCell colSpan={5} className="h-24 text-center text-xs text-purple-600/80">
+                          Fetching positions from MySQL...
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadingPositions ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-muted-foreground"
+                    ) : positions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center text-xs text-purple-700/80">
+                          No positions found in database.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      positions.map((pos) => {
+                        const rowId = pos.id ?? pos.position_id;
+                        if (!rowId) return null;
+                        return (
+                          <TableRow
+                            key={rowId}
+                            className="border-b border-purple-100/50 hover:bg-purple-50/50 transition-colors"
                           >
-                            Loading positions...
-                          </TableCell>
-                        </TableRow>
-                      ) : positions.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-muted-foreground"
-                          >
-                            No positions found. Click &quot;Create Position&quot; to add one.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        positions.map((pos) => {
-                          const rowId = pos.id ?? pos.position_id;
-                          if (!rowId) return null;
-                          return (
-                            <TableRow key={rowId}>
-                              <TableCell className="font-mono">{rowId}</TableCell>
-                              <TableCell>{pos.position_code}</TableCell>
-                              <TableCell>{pos.position_name}</TableCell>
-                              <TableCell className="text-muted-foreground text-sm">
-                                {pos.created_at
-                                  ? new Date(pos.created_at).toLocaleDateString()
-                                  : "-"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => void handleViewPosition(rowId)}
-                                  >
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    Read
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => openEditPositionForm(pos)}
-                                  >
-                                    <Pencil className="w-4 h-4 mr-1" />
-                                    Update
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => void handleDeletePosition(rowId)}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-1" />
-                                    Delete
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                            <TableCell className="font-mono text-xs text-purple-700">#{rowId}</TableCell>
+                            <TableCell className="text-xs font-semibold text-purple-950">{pos.position_code}</TableCell>
+                            <TableCell className="text-xs text-purple-900">{pos.position_name}</TableCell>
+                            <TableCell className="text-xs text-purple-600/80">
+                              {pos.created_at ? new Date(pos.created_at).toLocaleDateString() : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => void handleViewPosition(rowId)}
+                                  className="h-7 px-2 text-xs text-purple-700 hover:bg-purple-100/80 rounded-lg"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  Read
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEditPositionForm(pos)}
+                                  className="h-7 px-2 text-xs text-purple-800 hover:bg-purple-100/80 rounded-lg"
+                                >
+                                  <Pencil className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => void handleDeletePosition(rowId)}
+                                  className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 rounded-lg"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </section>
         )}
       </div>
     </div>

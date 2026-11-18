@@ -11,18 +11,33 @@ export const getAccessToken = (): string | null => {
     return token;
 };
 
-export const getUserId = (): number | null => {
+export interface DecodedUser {
+    id: number;
+    username: string;
+    role?: string;
+}
+
+export const getCurrentUser = (): DecodedUser | null => {
     const token = getAccessToken();
     if (!token) return null;
 
     try {
         const payloadBase64 = token.split(".")[1];
-        const decodedPayload = JSON.parse(atob(payloadBase64));
-        const userId = decodedPayload.sub ?? decodedPayload.id ?? decodedPayload.userId;
-        return userId ? Number(userId) : null;
+        const decoded = JSON.parse(atob(payloadBase64));
+        const id = decoded.sub ?? decoded.id ?? decoded.userId;
+        if (!id) return null;
+        return {
+            id: Number(id),
+            username: decoded.username || "",
+            role: decoded.role || "user",
+        };
     } catch {
         return null;
     }
+};
+
+export const getUserId = (): number | null => {
+    return getCurrentUser()?.id ?? null;
 };
 
 export const setTokens = (accessToken?: string, refreshToken?: string): void => {

@@ -15,5 +15,6 @@ export const CONFIG = {
         LOGIN: "/auth/login",
         REGISTER: "/auth/register",
         POSITIONS: "/positions",
+        USERS: "/users",
     },
 } as const;
